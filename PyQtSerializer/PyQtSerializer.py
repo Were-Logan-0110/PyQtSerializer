@@ -1,19 +1,37 @@
-from qtpy.QtWidgets import *
-from qtpy.QtCore import *
-from qtpy.QtGui import *
-from Serializer import *
-from typing import Any
-import sys
+from qtpy.QtCore import QObject, QDate, QModelIndex
+from PyQtSerializer.Serializer import *
+from qtpy.QtGui import QKeySequence
+from qtpy.QtWidgets import (
+    QTableWidgetItem,
+    QAbstractSpinBox,
+    QKeySequenceEdit,
+    QAbstractSlider,
+    QTableWidget,
+    QColorDialog,
+    QTextBrowser,
+    QProgressBar,
+    QMainWindow,
+    QListWidget,
+    QLCDNumber,
+    QTableView,
+    QListView,
+    QComboBox,
+    QDateEdit,
+    QLineEdit,
+    QWidget,
+    QDialog
+)
 
 
 class PyQtSerializer(Serializer):
+
     def __init__(
         self,
         key: Bytes16,
         target: QObject = None,
         savePath: str = default,
         defaultObjectNamesByQt: bool = False,
-        saveFormat: Literal["JSON", "PICKLE", "YAML"] = "JSON",
+        saveFormat: Literal["JSON", "PICKLE", "YAML"] = "YAML",
         serializeData: bool = False,
         usePickleForClasses: bool = False,
         encryptCodeObjects: bool = False,
@@ -156,7 +174,7 @@ class PyQtSerializer(Serializer):
         self._settings = {"_settings": {}}
 
     def setValue(self, name: str, value: object, serializeValue: bool = False):
-        """_summary_
+        """
         Adds A New Settings To The Data
         Args:
             name (str): Setting Name
@@ -180,7 +198,7 @@ class PyQtSerializer(Serializer):
         self._settings["_settings"][name] = value
 
     def getValue(self, name: str, evalValue: bool = False):
-        """_summary_
+        """
         Returns Saved Setting By It's Name
         Args:
             name (str): Setting Name
@@ -202,7 +220,7 @@ class PyQtSerializer(Serializer):
                 return None
 
     def deleteValue(self, name: str):
-        """_summary_
+        """
         Deletes Setting Key,Value From _Settings Dict
         Args:
             name (str): setting mame
@@ -215,7 +233,7 @@ class PyQtSerializer(Serializer):
         ignoreObjectNames: list[str] = [],
         notChildOf: list[object] = [],
     ):
-        """_summary_
+        """
         Dumps Settings And The UI State And Saves It Into A File
         Args:
             ignoreClasses (list[object], optional): Classes To Be Ignored When Serializing Widgets. Defaults to [].
@@ -239,9 +257,10 @@ class PyQtSerializer(Serializer):
             )
         _serializer.data = [item for item in _serializer.data if item is not None]
         _serializer._serialize()
-        _serializer.Serialize(hex=True)
-    def deserializeData(self):
-        """_summary_
+        _serializer.Serialize(_serializer.savePath, hex=True)
+
+    def DeserializeData(self):
+        """
         Returns deserialized saved data
         Returns:
             _type_: object
@@ -260,8 +279,9 @@ class PyQtSerializer(Serializer):
             initObjects=_serializer.initObjects,
             returnGlobalsForPickle=_serializer.returnGlobalsForPickle,
         )
+
     def load(self):
-        """_summary_
+        """
         Deserializes saved data and loads UI states
         """
         _serializer = self
@@ -286,6 +306,7 @@ class PyQtSerializer(Serializer):
             for k, v in widgInfo.items():
                 if k == "setGeometry":
                     widget.setGeometry(*v)
+        self.data = deserializedData
         for widgetInfo in deserializedData:
             if not widgetInfo.get("objectName"):
                 continue
@@ -297,7 +318,7 @@ class PyQtSerializer(Serializer):
                     widget.setText(value)
                 elif key == "setDisabled":
                     widget.setDisabled(eval(value) if isinstance(value, str) else value)
-                elif key == "setPlaceHolderText":
+                elif key == "setPlaceholderText":
                     widget.setPlaceholderText(value)
                 elif key == "setMaxLength":
                     widget.setMaxLength(int(value))
@@ -368,7 +389,7 @@ class PyQtSerializer(Serializer):
         ignoreObjectNames: list[str] = [],
         notChildOf: list[object] = [],
     ):
-        """_summary_
+        """
         Widget Serializer
         Args:
             widget (_type_): _description_
@@ -440,7 +461,7 @@ class PyQtSerializer(Serializer):
             serializedData["setDigitCount"] = widget.digitCount()
             serializedData["display"] = widget.value()
             del serializedData["setValue"]
-        if isinstance(widget, QSpinBox):
+        if isinstance(widget, QAbstractSpinBox):
             del serializedData["setText"]
         if isinstance(widget, QProgressBar):
             del serializedData["setText"]
@@ -453,7 +474,7 @@ class PyQtSerializer(Serializer):
             serializedData["setKeySequence"] = widget.keySequence().toString()
         if isinstance(widget, QColorDialog):
             widget.selectedColor().to
-        if isinstance(widget, QTableWidget):
+        if isinstance(widget, (QTableWidget, QTableView)):
             data = []
             for row in range(widget.rowCount()):
                 rowData = []
@@ -465,13 +486,13 @@ class PyQtSerializer(Serializer):
                         rowData.append("")
                 data.append(rowData)
             serializedData["setTableWidgetData"] = data
-        if isinstance(widget, QListWidget):
+        if isinstance(widget, (QListWidget, QListView)):
             data = [
                 self.list_widget.item(index).text()
                 for index in range(self.list_widget.count())
             ]
             serializedData["setListWidgetData"] = data
-        if isinstance(widget, QMainWindow):
+        if isinstance(widget, (QMainWindow, QDialog)):
             geo = widget.geometry()
             serializedData["setGeometry"] = (
                 geo.x(),
@@ -481,54 +502,8 @@ class PyQtSerializer(Serializer):
             )
         return widgInfo
 
-    def __setattr__(self, __name: str, __value: Any) -> None:
+    def __setattr__(self, __name: str, __value) -> None:
         if isinstance(__value, QObject):
             if __value.objectName() == "":
                 __value.setObjectName(__name)
         return super().__setattr__(__name, __value)
-if __name__ == "__main__":
-    class MyWindow(QMainWindow):
-        def __init__(self):
-            super().__init__()
-            self.setWindowTitle("PyQt Serializer Example")
-            self.setGeometry(100, 100, 400, 150)
-            self.centralWidget = QWidget()
-            self.setCentralWidget(self.centralWidget)
-            self.layout = QVBoxLayout()
-            self.lineEdit = QLineEdit()
-            self.layout.addWidget(self.lineEdit)
-            self.lineEdit.setObjectName("lineEdit")
-# When Inheritance Is Not Used You Will Have To Provide And Object Name For Each Widget You Want To Save It's State
-            self.checkBox = QCheckBox("Remember me")
-            self.checkBox.setObjectName("checkBox")
-            self.layout.addWidget(self.checkBox)
-            self.centralWidget.setLayout(self.layout)
-            # Initialize The Serializer
-            self.serializer = PyQtSerializer(b"3q\x83\x86Xo`u>\n3\xcb1B)\xad", target=self)
-            # Load data if available
-            self.loadData()
-
-        def loadData(self):
-            try:
-                self.serializer.load()
-                print(f"Text: {self.serializer.getValue('text')}")
-                print(f"checked: {self.serializer.getValue('checked')}")
-            except Exception as e:
-                print("Error loading data:", e)
-        def GetSetting(self):
-            self.loadData()
-            self.serializer.getValue("Setting",evalValue=False)
-        def AddNewSetting(self):
-            self.serializer.setValue("Setting",True,serializeValue = False)
-        def closeEvent(self, event):
-            text = self.lineEdit.text()
-            checked = self.checkBox.isChecked()
-            self.serializer.setValue("text", text, serializeValue=True)
-            self.serializer.setValue("checked", checked, serializeValue=True)
-            self.serializer.dump()
-            event.accept()
-
-    app = QApplication(sys.argv)
-    window = MyWindow()
-    window.show()
-    sys.exit(app.exec_())

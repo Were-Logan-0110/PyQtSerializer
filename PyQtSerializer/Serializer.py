@@ -1,12 +1,18 @@
-from Serialize import serialize, deserialize, generateEncryptionKey
+from PyQtSerializer.Serialize import serialize, deserialize, generateEncryptionKey
+from PyQtSerializer.utils import Bytes16
 from pickle import loads, dumps
 from typing import Literal
-from utils import Bytes16
 import yaml
 import json
+
+
 class Default:
     0
+
+
 default = Default()
+
+
 class Serializer:
     def __init__(
         self,
@@ -103,6 +109,7 @@ class Serializer:
                 encryptedObjectTypes,
                 self.encryptionKey,
             )
+
     def _serialize(self):
         self.data = serialize(
             self.data,
@@ -117,6 +124,7 @@ class Serializer:
             self.encryptedObjectTypes,
             self.encryptionKey,
         )
+
     def Serialize(
         self,
         filePath: str = default,
@@ -237,44 +245,3 @@ class Serializer:
         with open(filePath, "r", encoding="utf-8", errors="ignore") as serializedFile:
             data = serializedFile.read()
         return yaml.full_load(data)
-
-
-if __name__ == "__main__":
-
-    def PrintGreeting(name: str = "ahmed"):
-        print(f"Hello, {name}")
-
-    class MyClass:
-        def __init__(self, name="Ahmed", age=12) -> None:
-            self.name = name
-            self.age = age
-
-        def repr(self) -> str:
-            return f"Hello Im <{self.name}> My Age Is <{self.age}>"
-
-    if __name__ == "__main__":
-        data = {
-            "mywidget": {"QSizeObject": 3, "BallsNum": ("Balls", "NumOfEm")},
-            "myFunc": PrintGreeting,
-            "myClass": MyClass("Mahmoud", 26),
-        }
-        serializer = Serializer(
-            data,
-            "yaml",
-            True,
-            encryptDictNames=False,
-            initObjects=True,
-            encryptCodeObjects=True,
-        )
-        serializer.Serialize(hex=True)
-        print(f"Encryption Key: {serializer.encryptionKey}")
-        des = serializer.Deserialize(
-            hex=True,
-            deserializeData=True,
-            isEncrypted=False,
-            parseDigits=True,
-            initObjects=True,
-        )
-        print(des)
-        des.get("myFunc")("Karem")
-        print(des.get("myClass").repr())

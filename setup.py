@@ -1,6 +1,7 @@
 from setuptools import setup, find_packages
 import codecs
 import os
+
 here = os.path.abspath(os.path.dirname(__file__))
 VERSION = "0.0.13"
 DESCRIPTION = "A PyQt Serialization Library"
@@ -30,7 +31,8 @@ setup(
         "qt" "save",
     ],
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
+        "License :: OSI Approved :: MIT License",
         "Intended Audience :: Developers",
         "Programming Language :: Python :: 3",
         "Operating System :: Unix",

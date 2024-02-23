@@ -1,9 +1,10 @@
-# from crypto.Cipher import Blowfish
-from Cryptodome.Cipher import Blowfish
-from Cryptodome import Random
+try:
+    from Crypto.Cipher import Blowfish
+    from Crypto import Random
+except:
+    from Cryptodome.Cipher import Blowfish
+    from Cryptodome import Random
 import base64
-
-
 def generateEncryptionKey() -> bytes:
     return Random.new().read(16)
 

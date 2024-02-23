@@ -1,4 +1,4 @@
-from utils import Encrypt, Decrypt, Bytes16, generateEncryptionKey
+from PyQtSerializer.utils import Encrypt, Decrypt, Bytes16, generateEncryptionKey
 from marshal import loads as marshalLoads, dumps as marshalDumps
 from pickle import dumps, loads
 from types import FunctionType
